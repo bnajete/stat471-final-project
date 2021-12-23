@@ -1,0 +1,19 @@
+---
+title: "FINAL_PROJECT - Model evaluation"
+output: html_document
+---
+
+```{r, message = FALSE}
+library(rpart)         # to train decision trees
+library(rpart.plot)    # to plot decision trees
+library(randomForest)  # random forests
+library(gbm)           # boosting
+library(tidyverse)     # tidyverse
+library(kableExtra)
+```
+
+```{r}
+tibble(Method = c("Decision Tree", "Random Forest", "Multi-class logistic model"), `Misclassification error` = c(0.575, 0.694, 0.826)) %>%
+  write_tsv("../results/model-evaluation.tsv")
+```
+

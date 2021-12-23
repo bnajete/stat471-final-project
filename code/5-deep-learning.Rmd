@@ -1,0 +1,126 @@
+---
+title: "FINAL_PROJECT - Deep learning modeling"
+author: 'Najete Benmansour, Yan Meiri'
+
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: no
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+```{r, message = FALSE}
+library(keras)         # to train neural networks
+library(kableExtra)    # to print tables
+library(cowplot)       # to print side-by-side plots
+library(tidyverse)     # tidyverse
+```
+
+```{r}
+source("deep_learning_helpers.R")
+```
+
+```{r}
+# load the train and test data
+songs_train= read_tsv("../data/clean/songs_train.tsv",
+                      #specifying the column types
+                col_types = list("c", "c", "c", "d", "d", "f", "d", "f",
+                                 "d", "d", "d", "d", "d", "d", "f", "d", "f"))
+
+songs_test= read_tsv("../data/clean/songs_test.tsv",
+                      #specifying the column types
+                col_types = list("c", "c", "c", "d", "d", "f", "d", "f",
+                                 "d", "d", "d", "d", "d", "d", "f", "d", "f"))
+```
+
+```{r}
+songs_train = songs_train %>% select(-track_name, -artist_name)
+songs_test = songs_test %>% select(-track_name, -artist_name)
+```
+```{r}
+songs_train = songs_train %>% mutate(int_track_genre =    # create new column names based 
+           case_when(track_genre == "Hip-Hop"            #  on prefix and suffix
+                     ~ 0,             
+                     track_genre == "Rock"            #  on prefix and suffix
+                     ~ 1, 
+                     track_genre == "Pop"            #  on prefix and suffix
+                     ~ 2,
+                     track_genre == "Country"            #  on prefix and suffix
+                     ~ 3,
+                     track_genre == "RnB"            #  on prefix and suffix
+                     ~ 4,
+                     track_genre == "Jazz"            #  on prefix and suffix
+                     ~ 5,)) %>%
+            select(-track_genre)
+
+songs_test = songs_test %>% mutate(int_track_genre =    # create new column names based 
+           case_when(track_genre == "Hip-Hop"            #  on prefix and suffix
+                     ~ 0,             
+                     track_genre == "Rock"            #  on prefix and suffix
+                     ~ 1, 
+                     track_genre == "Pop"            #  on prefix and suffix
+                     ~ 2,
+                     track_genre == "Country"            #  on prefix and suffix
+                     ~ 3,
+                     track_genre == "RnB"            #  on prefix and suffix
+                     ~ 4,
+                     track_genre == "Jazz"            #  on prefix and suffix
+                     ~ 5,)) %>%
+            select(-track_genre)
+```
+
+
+
+```{r}
+num_classes = 6
+
+x_train <- simplify2array(songs_train %>% select(-int_track_genre)) 
+x_test <- simplify2array(songs_test %>% select(-int_track_genre))
+
+# extract the responses from the training and test data
+g_train <- songs_train %>% pull(int_track_genre) 
+g_test <- songs_test %>% pull(int_track_genre)
+
+# recode response labels using "one-hot" representation
+y_train <- to_categorical(g_train, num_classes)
+y_test <- to_categorical(g_test, num_classes)
+```
+
+
+
+```{r}
+model_lr <- keras_model_sequential() %>%
+  layer_flatten(input_shape =            # flatten during model-building
+                  c(14)) %>% 
+  layer_dense(units = num_classes,       # number of outputs
+              activation = "softmax")    # type of activation function 
+
+model_lr %>%                                    
+  compile(loss = "categorical_crossentropy",   # which loss to use
+          optimizer = optimizer_adam(),     # how to optimize the loss
+          metrics = "accuracy")             # how to evaluate the fit
+```
+```{r}
+model_lr %>% 
+          fit(x_train,                  # supply training features
+          y_train,                  # supply training responses
+          epochs = 10,               
+          batch_size = 32,        
+          validation_split = 0.2)   # use 20% for validation
+```
+```{r}
+predicted_classes_lr = model_lr %>% predict(x_test) %>% 
+                                k_argmax() %>% as.integer() 
+# accuracy
+accuracy_lr = mean(predicted_classes_lr == g_test)
+accuracy_lr
+```
+
+

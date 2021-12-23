@@ -1,0 +1,45 @@
+---
+title: "FINAL_PROJECT - Cleaning data"
+author: 'Najete Benmansour, Yan Meiri'
+
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: no
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+```{r}
+library(lubridate)
+library(tidyverse)
+```
+
+
+```{r}
+songs_data_raw = read_csv(file = "../data/raw/raw_dataset.csv", 
+                          col_types = list("c", "c", "f", "c", "c", "d", "d", "f",
+                                 "d", "f", "d", "d", "d", "d", "d", "d", "f", "d", "f"))
+```
+
+
+```{r}
+# we remove the na from the dataset
+songs_data = songs_data_raw %>%
+              na.omit()  %>%
+              select(-artist_id, -track_id) 
+```
+
+
+```{r}
+# write cleaned data to file
+write_tsv(songs_data, file = "../data/clean/songs_data.tsv")
+```
+
+

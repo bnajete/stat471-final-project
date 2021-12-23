@@ -1,0 +1,181 @@
+---
+title: "FINAL_PROJECT - Tree modeling"
+author: 'Najete Benmansour, Yan Meiri'
+
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: no
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+options(scipen = 0, digits = 3)  # controls number of significant digits printed
+```
+
+
+
+```{r, message = FALSE}
+library(rpart)         # to train decision trees
+library(rpart.plot)    # to plot decision trees
+library(randomForest)  # random forests
+library(gbm)           # boosting
+library(tidyverse)     # tidyverse
+library(kableExtra)
+```
+
+```{r}
+# load the train and test data
+songs_train= read_tsv("../data/clean/songs_train.tsv",
+                      #specifying the column types
+                col_types = list("c", "c", "c", "d", "d", "f", "d", "f",
+                                 "d", "d", "d", "d", "d", "d", "f", "d", "f"))
+
+songs_test= read_tsv("../data/clean/songs_test.tsv",
+                      #specifying the column types
+                col_types = list("c", "c", "c", "d", "d", "f", "d", "f",
+                                 "d", "d", "d", "d", "d", "d", "f", "d", "f"))
+```
+
+
+## Finding a tree of optimal size via pruning and cross-validation
+
+
+```{r}
+songs_train = songs_train %>% select(-track_name, -artist_name)
+songs_test = songs_test %>% select(-track_name, -artist_name)
+```
+```{r}
+tree_fit = rpart(track_genre ~ ., 
+                 method = "class",              # classification 
+                 parms = list(split = "gini"),  # Gini index for splitting
+                 data = songs_train)
+
+rpart.plot(tree_fit)
+```
+
+```{r}
+tree_fit_0 = rpart( track_genre ~ ., 
+                 method = "class",              # classification 
+                 parms = list(split = "gini"),  # Gini index for splitting
+                 data = songs_train,
+                 minsplit = 2,
+                 minbucket = 1,
+                 cp = 0)
+```
+
+```{r}
+cp_table = printcp(tree_fit_0) %>% as_tibble() 
+```
+
+```{r}
+p = cp_table %>%
+  filter(nsplit >=2) %>% 
+  ggplot(aes(x = nsplit+1, y = xerror, 
+             ymin = xerror - xstd, ymax = xerror + xstd)) + 
+  geom_point() + geom_line() +
+  geom_errorbar(width = 0.2) +
+  xlab("Number of terminal nodes") + ylab("CV error") + 
+  geom_hline(aes(yintercept = min(xerror)), linetype = "dashed") + 
+  scale_x_log10() +
+  theme_bw()
+```
+```{r}
+# we save the plot
+ggsave(filename = "../results/cv-error-decision-tree.png", 
+       plot = p, 
+       device = "png", 
+       width = 5, 
+       height = 3)
+```
+```{r}
+
+```
+```{r}
+optimal_tree_info
+```
+
+```{r}
+optimal_tree_info = cp_table %>% 
+  filter(xerror - xstd < min(xerror)) %>% 
+  arrange(nsplit) %>% 
+  head(1)
+write_tsv(optimal_tree_info, file = "../results/optimal_tree_info.tsv")
+```
+```{r}
+optimal_tree = prune(tree = tree_fit_0, cp = optimal_tree_info$CP)
+```
+```{r}
+# misclassification error of the tuned decision tree
+pred_tuned_decision_tree = predict(optimal_tree, 
+                                   newdata = songs_test, 
+                                   type = "class")
+error_tuned = mean(pred_tuned_decision_tree != songs_test$track_genre)
+error_tuned
+```
+
+
+
+## Random forests
+
+
+Tuning for the m value
+```{r}
+# tuning for the m value
+m_values = seq.int(1, 14, by = 3)
+oob_values = c()
+for (m in m_values){
+  rf = randomForest(factor(track_genre) ~ ., mtry = m, 
+                    ntree = 500, 
+                    importance = FALSE,
+                    data = songs_train)
+  oob_values = append(oob_values, getElement(rf$err.rate[500, "OOB"], "OOB"))
+}
+```
+
+```{r}
+p = tibble(m = m_values,
+       oob = oob_values) %>%
+   ggplot(aes(x =m, y = oob)) + 
+  labs(x = "Value of m",
+       y = "OOB error") +
+  geom_point() + geom_line() + scale_x_continuous(breaks = m_values) + theme_bw()
+
+# save the histogram
+ggsave(filename = "../results/m-tuning.png", 
+       plot = p, 
+       device = "png", 
+       width = 5, 
+       height = 3)
+```
+```{r}
+set.seed(1)
+rf_fit_opt = randomForest(factor(track_genre) ~ ., data = songs_train, 
+                      importance = TRUE,
+                      mtry = 1, ntree= 500)
+```
+
+```{r}
+varImpPlot(rf_fit_opt, n.var = 10)
+
+```
+```{r}
+# misclassification error of the random forest
+rf_probabilities = predict(rf_fit_opt,
+                          type = "response",
+                          newdata = songs_test,
+                          predict.all = TRUE)$individual
+error_rf = mean(rf_probabilities != songs_test$track_genre)
+error_rf
+```
+
+
+

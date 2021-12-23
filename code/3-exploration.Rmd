@@ -1,0 +1,161 @@
+---
+title: "FINAL_PROJECT - Exploration"
+author: 'Najete Benmansour, Yan Meiri'
+
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: no
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+# load libraries
+library(kableExtra)                     # for printing tables
+library(cowplot)                        # for side by side plots
+library(lubridate)                      # for dealing with dates
+library(maps)                           # for creating maps
+library(tidyverse)
+library(reshape2)
+```
+
+```{r}
+# load the train  data
+songs_train = read_tsv("../data/clean/songs_train.tsv",
+                      #specifying the column types
+                col_types = list("c", "c", "f", "d", "d", "f", "d", "f",
+                                 "d", "d", "d", "d", "d", "d", "f", "d", "f"))
+```
+
+### Number of observations in each class
+```{r}
+# we compute the number of observations in each class
+observations_class = songs_train %>% group_by(track_genre) %>%
+               summarize(count = n())%>%
+                ungroup()
+```
+```{r}
+write_tsv(observations_class, file = "../results/observations_class.tsv")
+```
+```{r}
+songs_train
+```
+
+### Variations of each features following the track genre
+```{r}
+p1 = songs_train %>% ggplot(aes(y = track_genre, x = danceability)) + 
+  geom_boxplot() + 
+  labs(x = "Danceability",
+       y = "Genre of the song") +
+  theme_bw() 
+
+p2 = songs_train %>% ggplot(aes(y = track_genre, x = energy)) + 
+  geom_boxplot() + 
+  labs(x = "Energy",
+       y = "Genre of the song") +
+  theme_bw() 
+
+p3 = songs_train %>% ggplot(aes(y = track_genre, x = loudness)) + 
+  geom_boxplot() + 
+  labs(x = "Loudness",
+       y = "Genre of the song") +
+  theme_bw() 
+
+
+p4 = songs_train %>% ggplot(aes(y = track_genre, x = speechiness)) + 
+  geom_boxplot() + 
+  labs(x = "Speechiness",
+       y = "Genre of the song") +
+  theme_bw() 
+
+p5 = songs_train %>% ggplot(aes(y = track_genre, x = acousticness)) + 
+  geom_boxplot() + 
+  labs(x = "Acousticness",
+       y = "Genre of the song") +
+  theme_bw() 
+
+p6 = songs_train %>% ggplot(aes(y = track_genre, x = instrumentalness)) + 
+  geom_boxplot() + 
+  labs(x = "Instrumentalness",
+       y = "Genre of the song") +
+  theme_bw() 
+
+p7 = songs_train %>% ggplot(aes(y = track_genre, x = liveness)) + 
+  geom_boxplot() + 
+  labs(x = "Liveness",
+       y = "Genre of the song") +
+  theme_bw() 
+
+p8 = songs_train %>% ggplot(aes(y = track_genre, x = valence)) + 
+  geom_boxplot() + 
+  labs(x = "Valence",
+       y = "Genre of the song") +
+  theme_bw() 
+
+p9 = songs_train %>% ggplot(aes(y = track_genre, x = tempo)) + 
+  geom_boxplot() + 
+  labs(x = "Tempo",
+       y = "Genre of the song") +
+  theme_bw()
+
+p10 = songs_train %>% ggplot(aes(y = track_genre, x = duration_ms)) + 
+  geom_boxplot() + 
+  labs(x = "Duration of the song (in ms)",
+       y = "Genre of the song") +
+  theme_bw()
+
+
+boxplot1 = plot_grid(p1, p2, p3, p4, p5, rel_heights = c(1,1,1), nrow = 2)
+```
+```{r}
+# save the boxplots
+ggsave(filename = "../results/features-boxplot-1.png", 
+       plot = boxplot1, 
+       device = "png", 
+       width = 6, 
+       height = 5)
+```
+
+```{r}
+boxplot2 = plot_grid(p6, p7, p8, p9, p10, rel_heights = c(1,1,1), nrow = 2)
+# save the boxplots
+ggsave(filename = "../results/features-boxplot-2.png", 
+       plot = boxplot2, 
+       device = "png", 
+       width = 6, 
+       height = 5)
+```
+
+### Correlation between the features
+```{r}
+songs_features = songs_train %>% select(-track_name, -artist_name, -track_genre,
+                                        -key, -mode, -time_signature, -explicit)
+cormat <- round(cor(songs_features),2)
+melted_cormat <- melt(cormat)
+```
+
+
+```{r}
+heatmap_features=ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile() + 
+  labs(x = "Feature 1",
+       y = "Feature 2") +
+  theme_bw() + theme(axis.text.x=element_text(angle = 90, hjust = 0))
+```
+```{r}
+# save the heatmap
+ggsave(filename = "../results/heatmap-features.png", 
+       plot = heatmap_features, 
+       device = "png", 
+       width = 6, 
+       height = 5)
+```
+

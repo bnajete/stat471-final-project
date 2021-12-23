@@ -1,0 +1,367 @@
+---
+title: "FINAL_PROJECT - Download data"
+author: 'Najete Benmansour, Yan Meiri'
+
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: no
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+
+#DATA IMPORT
+```{r}
+library(spotifyr)
+library(tidyverse)
+library(rjson)
+library(httr)
+library(jsonlite)
+```
+
+## Authentification
+```{r}
+### SPOTIFY API - For security measures, the private key are going to b
+Sys.setenv(SPOTIFY_CLIENT_ID = '')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '')
+
+access_token <- get_spotify_access_token()
+
+### LAST FM API
+lastfm_apikey = ""
+```
+
+First lead: obtain artists by their music labels and retrieve the audio features for each of these artists. Issue : the API calls seem to break sometimes and the genres resulting from the Last.fm API calls are imbalanced.
+```{r, message=FALSE, results="hide"}
+
+# list of labels we're getting the artists from
+labels = c("EMI", "Sony BMG", "Universal Music Group", "Warner Music Group",
+           "Domino", "XL", "Republic Records", "Capitol Records Nashville",
+           "Atlantic Records", "Capitol Music Group", "Columbia Records",
+           "Interscope Records")
+# we get the ids of the artists
+artists = c()
+
+for (label in labels){
+  for (offset in range(0:3)){
+    artists_label = c(get_label_artists(label, offset = offset, limit = 50)['name'])
+    for (artist in artists_label){
+      artists = append(artists, artist)
+    }
+  }
+}
+```
+For each of the artist in artists, we retrieve the audio features of the artist's entire discography on Spotify. Some issues happened during the API calls for an unknown reason.
+```{r}
+tibble_songs_1 = NULL
+for (artist in artists[1:100]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_1 = bind_rows(tibble_songs_1, tibble_artist)
+}
+```
+```{r}
+tibble_songs_2 = NULL
+for (artist in artists[101:200]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_2 = bind_rows(tibble_songs_2, tibble_artist)
+}
+```
+```{r}
+tibble_songs_3 = NULL
+for (artist in artists[201:300]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_3 = bind_rows(tibble_songs_3, tibble_artist)
+}
+```
+```{r}
+tibble_songs_4 = NULL
+for (artist in artists[301:400]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_4 = bind_rows(tibble_songs_4, tibble_artist)
+}
+```
+```{r}
+tibble_songs_6 = NULL
+for (artist in artists[501:600]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_6 = bind_rows(tibble_songs_6, tibble_artist)
+}
+```
+```{r}
+tibble_songs_7 = NULL
+for (artist in artists[601:700]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_7 = bind_rows(tibble_songs_7, tibble_artist)
+}
+```
+```{r}
+tibble_songs_8 = NULL
+for (artist in artists[701:800]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_8 = bind_rows(tibble_songs_8, tibble_artist)
+}
+```
+```{r}
+tibble_songs_9 = NULL
+for (artist in artists[801:900]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_9 = bind_rows(tibble_songs_9, tibble_artist)
+}
+```
+```{r}
+tibble_songs_10 = NULL
+for (artist in artists[901:1000]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_10 = bind_rows(tibble_songs_10, tibble_artist)
+}
+```
+```{r}
+tibble_songs_11 = NULL
+for (artist in artists[1001:1100]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_11 = bind_rows(tibble_songs_11, tibble_artist)
+}
+```
+```{r}
+tibble_songs_12 = NULL
+for (artist in artists[1101:1200]){
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit)
+  tibble_songs_12 = bind_rows(tibble_songs_12, tibble_artist)
+}
+```
+```{r}
+# we create one big tibble with all the tracks for which we have the audio 
+# features
+tibble_songs = bind_rows(tibble_songs_1, tibble_songs_2, tibble_songs_3,
+                         tibble_songs_4, tibble_songs_5, tibble_songs_6,
+                         tibble_songs_7, tibble_songs_8, tibble_songs_8,
+                         tibble_songs_9, tibble_songs_10, tibble_songs_11,
+                         tibble_songs_12)
+```
+
+We first clean the song features tibble by keeping only distinct names and removing some of the versions of the songs we don't need (such as Live or Demo).
+```{r}
+cleaned_tibble_songs = tibble_songs %>% distinct(artist_name, track_name, 
+                                        .keep_all = TRUE) %>%
+                        filter(!str_detect(track_name, 
+                          'Live|Bonus|Remaster|Edited|Instrumental|Remix|Demo'))
+```
+
+Get the genre (from the tags) in Last.fm. There were once again issues with the API calls.
+```{r}
+artist_names = cleaned_tibble_songs$artist_name
+track_names = cleaned_tibble_songs$track_name
+#track_genres = c()
+n = length(artist_names)
+range = 45627:n
+for (i in range){
+  res = GET("http://ws.audioscrobbler.com/2.0/",
+    query = list(method = "track.getInfo", api_key = lastfm_apikey,
+                 artist = artist_names[i], track = track_names[i],
+                 format = "json"))
+  data_track = fromJSON(rawToChar(res$content))
+  track_genres = append(track_genres, data_track$track$toptags$tag[1]$name[1])
+}
+
+```
+
+We create a tibble matching every song we have with its genre.
+
+```{r}
+tibble_genres = tibble(
+  artist_name = artist_names,
+  track_name = track_names,
+  track_genre = track_genres
+)
+```
+We only select the genres that are actually music genres and that are represented enough. When it's a mix of genres, we only keep the last word : for example pop rock becomes rock.
+```{r}
+tibble_genres  = tibble_genres %>% separate(track_genre, 
+                           into = c("genre1", "genre2"), sep = " ") %>%
+                  mutate(final_genre =
+                           case_when(is.na(genre2)
+                                     ~ genre1,
+                                     genre2 == "hop"
+                                     ~ "Hip-Hop",
+                                      TRUE
+                                     ~ genre2)) %>%
+                  select(-genre1, -genre2)
+```
+
+```{r}
+music_genres = tibble_genres %>% group_by(final_genre) %>%
+                  summarize(count = n()) %>% arrange(desc(count)) %>%
+                  head(10) %>%
+                  pull(final_genre)
+music_genres                  
+```
+
+Unfortunately, we found out that the genres were unequally represented in the dataset. We therefore decided to retrieve the top songs for each of the following genres in Last.fm. After we have the title, we retrive the corresponding audio features on Spotify.
+```{r}
+music_genres = c("Hip-Hop", "Rock", "Pop", "Country", "RnB", "Jazz")
+```
+
+```{r}
+# retrieve the top 1000 songs for each genre
+tibble_genre_raw = NULL
+for (genre in c(music_genres)){
+  res = GET("http://ws.audioscrobbler.com/2.0/",
+    query = list(method = "tag.getTopTracks", api_key = lastfm_apikey,
+                 tag = genre, limit = 1000,
+                 format = "json"))
+  data_track = fromJSON(rawToChar(res$content))
+  track_artists = data_track$tracks$track$artist$name
+  track_titles = data_track$tracks$track$name
+  tibble_genre = tibble(track_name = track_titles,
+                        artist_name = track_artists,
+                        track_genre = genre)
+  tibble_genre_raw = bind_rows(tibble_genre_raw, tibble_genre)
+}
+```
+
+We join this new genre tibble with the previous audio features tibble to see which audio features we still have to retrieve from the API.
+```{r}
+info = left_join(tibble_genre_raw, 
+                tibble_songs, 
+                by = c("track_name", "artist_name")) %>% 
+          distinct(track_name, artist_name, track_genre, .keep_all = TRUE)
+
+```
+
+```{r}
+# artists that break the API calls form Last.fm API
+error_artist = c('Jay-Z & Kanye West', 'Jay-Z and Linkin Park', 
+                 'Arizona Zervas', 'Kenny Rogers & Dolly Parton', 'Jet',
+                 'The Soggy Bottom Boys', 'Garth Brooks',
+                 'Chord Overstreet', 'Iron & Wine and Calexico',
+                 'Billy Bragg & Wilco', 'Johnny Cash & June Carter',
+                 'Robert Plant & Alison Krauss', "Birdman & Lil' Wayne",
+                 "Ella Fitzgerald & Louis Armstrong", "Dzihan & Kamien",
+                 "Beth Gibbons & Rustin Man", 
+                 'Ray LaMontagne and the Pariah Dogs', 'Normani',
+                 'Y2K'
+                 )
+```
+
+```{r}
+missing_artists = info %>% filter (is.na(track_id)) %>% 
+                  distinct(artist_name) %>%
+                  filter(!(artist_name %in% error_artist)) %>%
+                   pull(artist_name)
+```
+
+```{r}
+tibble_missing_songs = tibble_missing_songs %>% distinct(artist_name, track_name, .keep_all = TRUE)
+```
+
+
+```{r}
+missing_artists_2 = tibble_missing_songs %>% distinct(artist_name) %>%
+                      pull(artist_name)
+```
+
+```{r}
+new_missing_artists = setdiff(missing_artists,missing_artists_2)
+```
+
+We add the audio features of the songs for which the features are missing. Every time the API call breaks, we create a new list of missing artists in the cells above and run this cell below once again.
+```{r}
+#tibble_missing_songs = NULL
+for (artist in new_missing_artists){
+  missing_songs = info %>% filter (artist_name == artist) %>% 
+                  distinct(track_name) %>%
+                   pull(track_name)
+  tibble_artist = as_tibble(get_artist_audio_features(artist)) %>%
+          select(artist_name, artist_id, track_name, track_id, danceability, 
+                 energy, key, loudness, mode, speechiness, 
+                 acousticness, instrumentalness, liveness, valence, tempo,
+                 time_signature, duration_ms, explicit) %>%
+          filter(track_name %in% missing_songs)
+  tibble_missing_songs = bind_rows(tibble_missing_songs, tibble_artist)
+}
+```
+
+Following some issues with the initial API calls, we try filling out the missing data by correcting some of the names of the artists before exporting the raw data.
+```{r}
+tibble_genre_raw_2 = tibble_genre_raw
+tibble_genre_raw_2$artist_name[tibble_genre_raw_2$artist_name == "Lil' Wayne"] = "Lil Wayne"
+tibble_genre_raw_2$artist_name[tibble_genre_raw_2$artist_name == "OutKast"] = "Outkast"
+
+```
+
+We create the final audio features tibble by joining the first one (from the first method) and the one we just created.
+```{r}
+tibble_info_songs = bind_rows(tibble_songs, tibble_missing_songs) %>%
+                    distinct(track_name, artist_name, .keep_all = TRUE)
+```
+
+We join the genre and the audio features in one tibble.
+```{r}
+tibble_data_raw_2 = left_join(tibble_genre_raw_2,
+                            tibble_info_songs,
+                            by = c("track_name", "artist_name")) %>% 
+                    distinct(track_name, artist_name, track_genre, 
+                              .keep_all = TRUE)
+
+```
+
+```{r}
+tibble_data_raw = tibble_data_raw_2
+```
+
+We export the raw dataset.
+```{r}
+write.table(tibble_data_raw , file = "../data/raw/raw_dataset.csv")
+```
+

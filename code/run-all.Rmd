@@ -1,0 +1,19 @@
+---
+title: "FINAL_PROJECT - Run all"
+output: html_document
+---
+
+
+Running the Download file can't actually be done because a lot of the API calls were made multiple times and are really time consuming. Furthermore, we have taken out the api keys for security reasons.
+
+
+If running the following cell doesn't work, one has to open the Rmd files in the same order as listed below and trigger them manually.
+```{r}
+source("1-cleaning.Rmd")
+source("2-exploration.Rmd")
+source("3-train-test-split.Rmd")
+source("4-regression-modeling.Rmd")
+source("5-tree-modeling.Rmd")
+source("6-model-evaluation.Rmd")
+```
+

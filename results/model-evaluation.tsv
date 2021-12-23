@@ -1,3 +1,4 @@
-Method	Test RMSE
-Ridge	1.450519102883
-Lasso	1.482564851230461
+Method	Misclassification error
+Decision Tree	0.575
+Random Forest	0.694
+Multi-class logistic model	0.826

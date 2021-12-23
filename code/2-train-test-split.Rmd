@@ -1,0 +1,51 @@
+---
+title: "FINAL_PROJECT - Train test split"
+author: 'Najete Benmansour, Yan Meiri'
+
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: haddock
+    number_sections: yes
+    theme: lumen
+    toc: no
+    toc_depth: 4
+    toc_float: yes
+urlcolor: blue
+---
+
+```{r}
+library(tidyverse) 
+```
+
+```{r}
+# read in the cleaned data
+songs_data = read_tsv("../data/clean/songs_data.tsv",
+                      #specifying the column types
+                col_types = list("c", "c", "f", "d", "d", "f", "d", "f",
+                                 "d", "d", "d", "d", "d", "d", "f", "d", "f"))
+```
+
+```{r}
+set.seed(5) # seed set for reproducibility (DO NOT CHANGE)
+n = nrow(songs_data)
+train_samples = sample(1:n, round(0.8*n))
+
+# storing the training set in a tibble called hd_train
+songs_train = songs_data %>%
+            filter(row_number() %in% train_samples)
+
+# storing the test set in a tibble called hd_test
+songs_test = songs_data %>%
+          filter(!(row_number() %in% train_samples))
+```
+
+```{r}
+# save the train and test data
+write_tsv(x = songs_train, file = "../data/clean/songs_train.tsv")
+write_tsv(x = songs_test, file = "../data/clean/songs_test.tsv")
+```
+

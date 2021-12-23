@@ -1,7 +1,7 @@
 ---
-title: 'COVID-19 and County Health'
-author: 'Seokyoon Chang, Jessica Mixon, Greta Maayan Waldman (Edited by Eugene Katsevich)'
-date: 'May 2, 2021'
+title: 'Predicting and characterizing music genres'
+author: 'Najete Benmansour, Yan Meiri'
+date: 'December 19, 2021'
 output:
   bookdown::pdf_document2:
     number_sections: yes
@@ -24,123 +24,159 @@ The code to reproduce this report is available [on Github](https://github.com/Ka
 
 # Executive Summary
 
-**Problem.** Despite the growing body of research focused on understanding the progression of COVID-19, there is still much to be learned about population-level health factors that make some populations more susceptible to COVID-19 spread, case severity, and mortality. Hence, for our final project, we decided to look into various measures of health across US counties and analyze which factors were most predictive of case fatality rate throughout 2020, the first year of the COVID-19 pandemic. While only analyzing 2020 COVID-19 data only inherently limits our results, we also note 2020 data may actually be most likely to reflect differences in healthcare quality across counties, as it was in the early months of the pandemic that many health systems faced unique issues of resource scarcity.
+**Problem.** 
+According to the Wikipedia definition, a music genre is "a conventional category that identifies some pieces of music as belonging to a shared tradition or set of conventions". Many different genres and even mix of genres exist nowadays. Users can even find it hard to classify some of the music they listen to or songs in general as belonging to a specific genre. Reading through Spotify's API's description, we found out that the music platform has created a set of features to characterize a song and it made us wonder if these features might allow us to predict and therefore characterize the genre of music a song belongs to. A classification like this one would permit defining what the genre of a song really is and could be beneficial to improve music recommendation systems.
 
-**Data.** Our dataset pulled data from two sources: a New York Times time series dataset which includes cumulative counts of COVID-19 cases and deaths at the county level, and data from County Health Rankings & Roadmaps, a program focused on collecting county-level data on a variety of health determinants. For the latter data source, we pulled 2019 or older data from various datasets on their website, as many key variables we wanted to study are still missing for 2020 and we assume that most county-level health determinants stayed very similar from 2019 to 2020. Our explanatory variables span the four main categories of health factors that the program identifies: health behaviors (e.g., smoking, sexual activity), clinical care (e.g., flu vaccine rate), social and economic factors (e.g., unemployment rate), and physical environment (e.g., degree of air pollution). Our primary response variable of interest was deaths per cases, which we created by dividing county-level deaths by count-level cases.
+**Data.** 
+Our dataset pulled data from two sources : the Spotify developer API, which allowed us to retrieve the audio features of the songs that were going to be part of the dataset and the LastFM API, which we used to find the genre of each of the tracks. The study focused on six music genres : Country, Hip-Hop, Jazz, Pop, RnB and Rock.
 
-**Analysis.** Before exploring our data or running any analyses, we split our data into a training dataset and a test dataset, with the test dataset reserved for assessing and comparing model performance. Then, we explored our data to check for normality assumptions necessary for linear regression and to assess correlations between variables and between variables and the response. In order to build an optimal predictive model, we then built six different cross-validated models: ordinary least squares, ridge regression, LASSO regression, elastic net regression, random forest, and boosting. Of the regression models, elastic net had the lowest test error and of the tree-based models, the boosted model had the lowest test error (as well as the lowest test error overall).
+**Analysis.** 
+Before exploring our data or running any analyses, we split our data into a training dataset and a test dataset, with the test dataset reserved for assessing and comparing model performance. Then, we explored our data to assess correlations between variables and between variables and the response. In order to build an optimal predictive model, we then built three different cross-validated models: a classification tree, random forest and a multi-class logistic model. We also tried to implement a boosting model in addition to the other tree-based models, but the multi-class classification seemed to cause an exremely high misclassification and we therefore chose to take out this model.
 
-**Conclusions.** Interestingly, we found that the boosted and elastic net regression both pointed to similar types of variables as the strongest predictors of deaths per cases. Specifically, our optimal boosted model revealed that variables related to residential segregation and unemployment emerged as the most significant predictors, revealing that structural economic and health access inequalities were more predictive of COVID-19 deaths per cases than other variables. We hope that this analysis can inform policies aimed at improving health outcome determinants, both in the context of COVID-19 and more generally going forward. 
+**Conclusions.** 
+Unfortunately, it looks like none of the models we used were efficient enough to create a real and accurate tool for classifying music genre. We think that it is unlikely that the  inaccuracy of our models could have been caused by some class imbalances seeing how we made sure that each of the classes would be roughly equivalently represented. It could then be caused by a lack of correlation between the set of features created by Spotify or by a dataset too small to tackle such a big classification task.
+
+\newpage
 
 # Introduction
 
-**Background.** Coronavirus disease (COVID-19) has had a devastating global impact, with a cumulative total of 149,987,772 confirmed cases and 3,157,594 deaths worldwide as of April 28, 2021.^[Coronavirus Cases: Worldometer. (n.d.). https://www.worldometers.info/coronavirus/. 
-] About a fifth of these cases have been in the United States, with a recent count of 32,551,440 cases and 582,668 deaths.^[Ibid.] With these staggering numbers still increasing despite recent large-scale vaccine rollouts, it is of vital importance to utilize various data sources to understand both the progression of COVID-19 thus far as well as the highest risk factors for contracting COVID-19. Furthermore, a thorough analysis of COVID-19 rates and predictive factors may help inform strategies to improve public health policies that could mitigate the negative impact of a future pandemic, which many scientists say is not a matter of if but of when.^[Robbins, J. (2021, January 4). Heading Off the Next Pandemic. Kaiser Health News. https://khn.org/news/infectious-disease-scientists-preventing-next-pandemic/. ]
+**Background.** 
+Spotify, a Swedish Audio streaming and media services, is one of the largest music streaming service provider. Founded 15 years ago, it has been able to confirm itself as one of the main actors of the music industry and includes more than 70 million songs. It has even broaden its offer by adding podcasts and is present internationally.
 
-Past research has shown that infectious diseases are influenced by a variety of factors. Obesity, for instance, is associated with a higher likelihood of contracting influenza A, and seasonal temperature changes have shown to be predictive of the 2003 severe acute respiratory syndrome (SARS).^[Tian, T., Zhang, J., Hu, L., Jiang, Y., Duan, C., Li, Z., ... & Zhang, H. (2021). Risk factors associated with mortality of COVID-19 in 3125 counties of the United States. Infectious diseases of poverty, 10(1), 1-8.] The CDC is currently in the process of identifying potential risk factors for severe COVID-19 illness,^[Centers for Disease Control and Prevention. (n.d.). Assessing Risk Factors for Severe COVID-19 Illness. Centers for Disease Control and Prevention. https://www.cdc.gov/coronavirus/2019-ncov/covid-data/investigations-discovery/assessing-risk-factors.html.] and some that have already been identified include heart disease, diabetes, and pregnancy.^[Centers for Disease Control and Prevention. (n.d.). Certain Medical Conditions and Risk for Severe COVID-19 Illness. Centers for Disease Control and Prevention. https://www.cdc.gov/coronavirus/2019-ncov/need-extra-precautions/people-with-medical-conditions.html.] Yet despite these efforts, there is still much to be learned. Specifically, there is still insufficient research to explain the differences in COVID-19 susceptibility and mortality that exist not just on the individual level but also on broader population levels. 
+Against some of its competitors, it is often cited that one of Spotify's strengths is their personalized playlists, created weekly or monthly, and that allow a user to discover new songs according to their taste and their listening habits. 
 
-**Analysis goals.** Given our knowledge of the capacity for a variety of factors to influence infectious disease spread as well as the fact that different counties in the US have differing levels of baseline health factors, we sought to investigate how rates of COVID-19 cases and deaths across the US are affected by various measures of community health. Specifically, we were interested in which kinds of factors (e.g., clinical, behavioral, health)—and which specific variables—are most predictive of deaths per cases (also known as case fatality rate). 
 
-**Significance.** We hope that our analysis will contribute to the growing body of research on COVID-19 risk factors by expanding our understanding of COVID-19 and supporting efforts to mitigate the risk of future pandemics. Our results also shed light on the importance of analyzing social determinants of health in efforts to improve health outcomes. 
+**Analysis goals.** 
+Given the characteristics established for each track available on Spotify, we sought to investigate how accurately we could predict one track's accredited genre on the radio and which specific characteristics are most predictive of a track's genre. We will evaluate the success of the different classification models by evaluating the misclassification errors of each contemplated model.
+
+
+**Significance.** 
+Recommendation systems are a strength for the Spotify platform and we ought to keep on improving it by making it as tuned with each user as possible. One possible track for improving this recommendation system would be the genre approach and that's why we think that this specific classification task can be useful, even more so that one can often notice genre classifications lacking coherency from time to time.
+
+\newpage 
 
 # Data
 
 ## Data sources
 
-Our dataset merged data from two sources: a dataset on US county-level health and a COVID-19 dataset that includes average cases and deaths per county. Each data source includes data from January 2020 to December 2020. 
+Our dataset merged data from two sources: the Spotify developer API for the regular information about a track as well as the Spotify features and the Last.fm API for the genre of a track. 
 
-The data regarding the health status of each county comes from County Health Rankings & Roadmaps, a program founded by the Robert Wood Johnson Foundation in collaboration with the University of Wisconsin Population Health Institute.^[County Health Rankings & Roadmaps. (n.d.) https://www.countyhealthrankings.org/] The program was designed to support community leaders in fostering equitable health outcomes by raising awareness about the variety of factors that influence length and quality of life, including economic and social factors. Specifically, the program considers all of the counties in the United States and includes measures of health behaviors, clinical care, social and economic factors, and the physical environment. In order to ensure a wide variety of explanatory variables in our dataset across the aforementioned categories, we pulled variables from the compiled dataset available on the program’s website and merged these variables into our final dataset.^[County Health Rankings & Roadmaps. (n.d.) 2021 Measures. https://www.countyhealthrankings.org/explore-health-rankings/measures-data-sources/2021-measures]
+The data regarding the regular information about a track comes from the Spotify developer API.^[Spotify Developer API Documentation https://developer.spotify.com/documentation/] This API was designed and created to help people developing applications using various Spotify functionalities. 
 
-The other dataset we drew from is the New York Times COVID-19 tracking dataset that includes cumulative COVID-19 cases and deaths in the United States at the county level.^[The New York Times Github. (n.d.) nytimes/covid-19-data. https://github.com/nytimes/covid-19-data] This time series dataset, compiled from state and local governments and health departments, includes data beginning from the first reported coronavirus case in Washington on Jan. 21, 2020. Times notes that because of the widespread shortage of testing in the first few months of the pandemic, the true COVID-19 prevalence—for those few months especially—may not be accurately represented in the data.  
+Specifically, we started the data retrieval by using a method allowing the user to retrieve a list of artists signed by a designated music label and a method allowing the user to retrieve all the audio features of the entire discography of a specified artist. 
+
+Seeing how the genre distribution in the resulting dataset was not as satisfying as expected, we decided to enrich it by retrieving songs that belonged to a specific genre on the Last.fm developer API ^[Last.fm API https://www.last.fm/api] before getting the corresponding audio features from Spotify. The Last.fm API stores many characteristics and one of them is named "tags", which often contain the genre of a track. Last.fm tags are freeform, but they tend to include commonly recognized genres.
 
 ## Data cleaning
 
-Our central task in the data cleaning phase of the project was merging the data from the two sources described above. Both data sources provided their respective data on a county level (classified as a 5-digit FIPS code). For each county in the New York Times COVID-19 dataset, the numbers of deaths and cases of COVID-19 were aggregated across 2020. We merged the two datasets on the county level, and then calculated the explanatory variables in accordance with the County Health Rankings Data Documentation. For the most part, the latter step consisted of dividing raw counts of a variable by the population of interest for the variable to calculate a percentage. 
+Our central task in the data cleaning phase of the project was merging the data from the two sources described above. In both data sources, the tuple consisting of the title of a track and the name of the performing artist was used as a unique key. We were then able to join these two tibbles on the features we have just cited. We also had to drop missing values which were caused by various glitches in some of the API calls.
+
+While running the first approach described above, there were a lot of cleaning made on the tags data. For instance, we had to make sure that the genre retrieved from the Last.fm API were actual genres because since the "tags" are freeform, they sometimes don't refer to an actual genre. We also needed to clean the retrieved tags, especially when the retrieved tag was a mix of genres. Accordingly, when the retrieved tags were a mix of multiple genres, we made the decision to only keep the last genre (pop rock became rock).
+
 
 ## Data description
 
 ### Observations
 
-Our dataset has a total of 935 observations, corresponding to each of the counties included in our analysis.
+Our dataset has a total of 4,538 observations, each corresponding to a different and unique song.
 
 ### Response Variable
 
-Our response variable is the cumulative COVID-19 deaths per cases for each county in the US. We created this variable via a simple mutate operation of cumulative cases per county divided by cumulative deaths per county. We use deaths per cases as our response variable as a proxy for case severity in different counties across the United States, as it inherently controls for population size variability. We do acknowledge, however, that using a single COVID-19 metric may not account for underlying heterogeneities between subgroups in each county, a bias that results from varied distributions within and between populations.^[U.S. News & World Report. (n.d.). COVID-19 Death Rate | Healthiest Communities. U.S. News & World Report. https://www.usnews.com/news/healthiest-communities/coronavirus-data/covid-death-rate?chart_type=line.]
+Our response variable is a categorical response which characterizes the genre of the song, taking value in a list of six different genres : Country, Hip-Hop, Jazz, Pop, RnB and Rock. We used this list of genres because we thought that those were the more commonly listened to and the more global - a lot of music genre are just branches from these more global ones. However, these genres we picked for our study may be too restrictive or too similar and that may cause a lack of accuracy in our predictive models.
+
 
 ### Features
 
-Drawing on data from County Health Rankings & Roadmaps, we included 41 explanatory variables in our analysis, which fall into four main categories: health behaviors, clinical care, social and economic factors, and physical environment. For a detailed specification of these variables, refer to Appendix \@ref(appendix).
+Drawing on data from both APIS, our dataset contains 18 features. For a detailed specification of these variables, refer to Appendix \@ref(appendix).
 
 ## Data allocation
 
-Before building our predictive models, we first removed observations from the dataset for which any variables had NA values. We decided to do this for consistency purposes, as some data analysis methods we employed require that no variables contain NA fields. We then split our dataset into two subsets: a training dataset used for building our predictive models and a test dataset used for evaluating our models. We used an 80-20 split, such that the training dataset consists of 80% of our observations and the dataset consists of 20% of our observations. Although this train-test split was performed separately for each class of methods, we utilized a random seed to ensure that each split led to the same results. 
+Before building our predictive models, we first removed observations from the dataset for which any variables had NA values. We decided to do this for consistency purposes, as some data analysis methods we employed require that no variables contain NA fields. We then split our dataset into two subsets: a training dataset used for building our predictive models and a test dataset used for evaluating our models. We used an 80-20 split, such that the training dataset consists of 80% of our observations and the dataset consists of 20% of our observations.  
 
 ## Data exploration
 
 ### Response
 
-We first sought to understand the response variable’s distribution. As seen in the histogram of deaths variable (Figure \@ref(fig:response-histogram)), the data appears to be right-skewed, with some counties exceeding a death per cases rate of 0.1.  The median deaths per cases is 0.018. We proceeded to determine which counties had extreme response rates by looking at the sorted data. The sorted data (Table \@ref(tab:top-10-counties)) shows that aggregated across 2020, the highest rates of deaths per cases were primarily in northeastern states such as New York, New Jersey, and Connecticut.
+We first sought to understand how many observations belong to each music genre. As we see in Table \@ref(tab:observations-class), the train data is roughly equally distributed amnong the six different genres.
 
-```{r response-histogram, out.width = "80%", fig.cap = "Distribution of case-fatality rate; vertical dashed line indicates the median.", fig.align='center', echo = FALSE}
-knitr::include_graphics("../results/response-histogram.png")
-```
-
-```{r top-10-counties, message = FALSE, echo = FALSE}
-read_tsv("../results/top-10-counties-data.tsv") %>%
-  kable(format = "latex", row.names = NA, 
-        booktabs = TRUE, digits = 2, 
-        col.names = c("County", "State", "Case-fatality rate"),
-        caption = "Top ten counties by case-fatality rate 
-        (expressed as a percentage).") %>%
+```{r observations-class, message = FALSE, echo = FALSE, fig.pos = "H"}
+read_tsv("../results/observations_class.tsv") %>%
+  kable(format = "latex", row.names = NA,
+        booktabs = TRUE, 
+        col.names = c("Music Genre", "Count"),
+        caption = "Number of observations in each class") %>%
   kable_styling(position = "center")
 ```
 
 ### Features
 
-[Omitted from template.]
+We then looked at what are the variations of the various audio characteristics given by Spotify depending on the genre of the songs. We first plotted boxplots illustrating the distribution of the continuous audio characteristics.
+
+```{r features-boxplots-1, out.width = "60%", fig.cap = "Distribution of the five first continous audio characteristics by genre", fig.align='center', echo = FALSE, fig.pos = "H"}
+knitr::include_graphics("../results/features-boxplot-1.png")
+```
+
+```{r features-boxplots-2, out.width = "60%", fig.cap = "Distribution of the five last continous audio characteristics by genre", fig.align='center', echo = FALSE, fig.pos = "H"}
+knitr::include_graphics("../results/features-boxplot-2.png")
+```
+We can observe in Figure \@ref(fig:features-boxplots-1) Hip-Hop and RnB have the highest danceabilities, which makes sense. We can also see that Rock is the most energetic genre out of the six genres. Also, Jazz has in general the lowest loudness but has clearly the highest acousticness. In Figure \@ref(fig:features-boxplots-2), it is noticeable that the songs duration are quite similar as well as the tempo. Furthermore, the liveness distributions across all genres are similarly low, which is a good sign seeing how we are not supposed to have live songs in our data.
+
+We then proceeded to study the correlation existing between the different  continuous features.
+```{r heatmap-features, out.width = "60%", fig.cap = "Correlation between the different continuous features", fig.align='center', echo = FALSE, fig.pos = "H"}
+knitr::include_graphics("../results/heatmap-features.png")
+```
+In Figure \@ref(fig:heatmap-features), the main correlations between features that can be seen are that loudness and energy seem to be correlated (meaning that a song that has a high value for the loudness characteristic would also have a high value for the energy characteristic) and that loudness and energy are seem to be both negatively correlated with acousticness.
 
 # Modeling
 
-## Regression-based methods
-
-### Ordinary least squares
-
-[Omitted from template.]
-
-### Penalized regression
-
-Despite the ordinary least squares method seeming to work well, we realized that fitting a linear model with so many explanatory variables might incur a large cost in variance and lead to suboptimal predictions. Hence, we decided to build and evaluate shrinkage models with the hopes of getting a more parsimonious and interpretable model. We ran three cross-validated regressions for which optimal values of lambda were chosen according to the one-standard-error rule: ridge, LASSO (Least Absolute Shrinkage and Selection Operator), and elastic net. 
-
-For the lasso, Figure \@ref(fig:lasso-CV-plot) shows the CV plot, Figure \@ref(fig:lasso-trace-plot) shows the trace plot, and Table \@ref(tab:lasso-coefficients) shows the selected features and their coefficients. 
-
-[Interpretation of lasso omitted from this template. Other penalized regression methods omitted from this template.]
-
-
-```{r lasso-CV-plot, out.width = "90%", fig.cap = "Lasso CV plot.", fig.align='center', echo = FALSE}
-knitr::include_graphics("../results/lasso-cv-plot.png")
-```
-
-```{r lasso-trace-plot, out.width = "90%", fig.cap = "Lasso trace plot.", fig.align='center', echo = FALSE}
-knitr::include_graphics("../results/lasso-trace-plot.png")
-```
-
-```{r lasso-coefficients, message = FALSE, echo = FALSE}
-read_tsv("../results/lasso-features-table.tsv") %>%
-  kable(format = "latex", row.names = NA, 
-        booktabs = TRUE, digits = 2, 
-        col.names = c("Feature", "Coefficient"),
-        caption = "Standardized coefficients for features in the lasso 
-        model based on the one-standard-error rule.") %>%
-  kable_styling(position = "center")
-```
-
 ## Tree-based methods
 
-[Omitted from template.]
+### Decision tree
+The first method we decided to implement was the decision tree. In order to have the most accurate model possible, we decided to find a tree of optimal size via pruning and cross-validation. We therefore picked the decision tree that minimilized the cross-validation error, like pictured in Figure \@ref(fig:cv-error-decision-tree).
+```{r cv-error-decision-tree, out.width = "60%", fig.cap = "Cross-validation error for the different value of terminal nodes in the decision tree", fig.align='center', echo = FALSE, fig.pos = "H"}
+knitr::include_graphics("../results/cv-error-decision-tree.png")
+```
+```{r optimal-tree-info}
+read_tsv("../results/optimal_tree_info.tsv") %>%
+  kable(format = "latex", row.names = NA,
+        booktabs = TRUE, 
+        col.names = c("CP", "Number of splits", "Rel error", "X error", "X standard deviation"),
+        caption = "Optimal tree information") %>%
+  kable_styling(position = "center")
+```
+As we see in Table \@ref(tab:optimal-tree-info), the optimal tree has 17 splits and therefore 18 terminal nodes.
+After training this optimal tree, we found a misclassification error of 57.5%  on the test set. This misclassification error is pretty high, but still lower than the dummy classifier which would be wrong 5 out of 6 times seeing how the classes are approximately equally balanced.
 
 ### Random forest
 
-### Boosting
+When we trained the random forest model, we picked a number of trees of 500 and decided to tune the value of m.
+```{r m-tuning, out.width = "60%", fig.cap = "Tuning of the m value for the random forest model", fig.align='center', echo = FALSE, fig.pos = "H"}
+knitr::include_graphics("../results/m-tuning.png")
+```
+
+We can see in Figure \@ref(fig:m-tuning) that the optimal value for m is 1, which is lower than the default value of 3. Furthermore, we can see in Figure \@ref(fig:var-importance) that for both metrics, speechiness and acousticness are among the most important variables in the random forest model.
+
+```{r var-importance, out.width = "60%", fig.cap = "Variable importance for the random forest model", fig.align='center', echo = FALSE, fig.pos = "H"}
+knitr::include_graphics("../results/varImpPlot.png")
+```
+After training this optimal random forest model, we found a misclassification error of 69.4%  on the test set. This misclassification error is pretty high, but still lower than the dummy classifier which would be wrong 5 out of 6 times seeing how the classes are approximately equally balanced.
+
+## Deep-learning method
+
+### Multi-class logistic model
+
+The multi-class logistic model was built after reformatting the train and test data. We applied a one-hot encoding on the testing data and turned the training tibble into an array in order to make the keras model work.
+
+
+```{r history-plot, out.width = "60%", fig.cap = "Plot of the model history", fig.align='center', echo = FALSE, fig.pos = "H"}
+knitr::include_graphics("../results/history_plot.png")
+```
+
+
+
+We built the multi-class logistic model using a "categorical crossentropy" loss with an "adam" optimizer using the "accuracy" metrics. We then fit the model with 10 epochs and a batch size of 32 (other values for the size of the batch didn't give any better results on the test accuracy).
+
+After training this model, we found an accuracy of 17.4% on the test set, which corresponds to a misclassification error of more than 82%, which is approximately as bad as the dummy classifier.
 
 # Conclusions
 
@@ -150,107 +186,54 @@ read_tsv("../results/lasso-features-table.tsv") %>%
 read_tsv("../results/model-evaluation.tsv") %>%
   kable(format = "latex", row.names = NA,
         booktabs = TRUE, digits = 2,
-        caption = "Root-mean-squared prediction errors for lasso and ridge regressions.") %>%
+        caption = "Misclassification error for all three models.") %>%
   kable_styling(position = "center")
 ```
 
-Table \@ref(tab:model-evaluation) shows the test RMSE for all the methods considered. Except for the OLS, the random forest and the boosted model have the lowest test errors. This is reasonable given these models’ tendencies to have high predictive accuracy. Between the two, the boosted model has the lowest test error, with a mean squared error of 0.000139, but it is closely followed by random forest, which has a mean squared error of 0.00141. Notably, however, the ridge, LASSO, and elastic net regressions perform about as well, with test MSEs of 0.000158, 0.000164, and 0.000161, respectively. Although OLS has the lowest training and test error, its adjusted R-squared value was only about 0.3, and there were too many features given the number of observations.
+Table \@ref(tab:model-evaluation) shows the misclassification error for all the methods considered. Surprisingly, the decision tree is the most accurate model. Overall, all three model are not good classifiers, with the multi-class logistic model doing as bad as the random classifier. This is really surprising seeing how we assumed this particular model would be the best out of the threes. This could maybe be explained by overfitting but it doesn't look like the validation loss is going up in Figure \@ref(fig:history-plot) which would be a proof of overfitting.
 
-Regardless of these differences in test MSE, the methods overlap significantly in their identification of important variables from the larger set. For instance, the elastic net regression selects the following variables, which are also selected by LASSO and deemed significant in the OLS model: other providers ratio, unemployment, income inequality, housing overcrowding, residential segregation—non-White/White, homeownership, and physical inactivity. The random forest and boosting models both include low birthweight percentage, median income, and unemployment percentage in the top 10 most important variables, as measured by their contributions to node purity. 
 
 
 ## Takeaways
+ 
+Our results show that, even if we're convinced that an efficient and accurate prediction of a song genre would be a good addition to the song recommender system, the strategy chosen for this study was not the right one. It could be caused by a glitch in the data we gathered or by the fact that the features given by Spotify are not correlated enough with the genre classification.
 
-Our results point to a few key determinants of health that, given their impact on COVID-19 deaths per cases rates in 2020, policymakers should consider when aiming to improve factors that would improve health overall but also potentially mitigate the mortality risk of another pandemic. The boosted model, which had the strongest predictive performance, suggests that residential segregation between non-white and white residents is the most important variable in predicting a county’s COVID-19 deaths per cases rate. The unemployment rate, availability of physical exercise opportunities, and measures of home ownership burden variables were also highly important in this model. These variables are identified across all models suggesting these relationships are robust. Residential segregation, unemployment, and home ownership burden are socioeconomic factors that affect an individual’s ability to access and pay for healthcare. In that regard, it is unsurprising that these factors would have a greater ability to predict differences in COVID-19 case fatalities across different counties in the United States. While some behavioral variables are also found to be significant (including STI incidence, high school completion, and others identified in the elastic net and lasso regressions), the variable importance ranking from the boosted model provides a highly interpretable hierarchy of the most influential factors from the greater set.
+Some issues present in the gathered data could be the size of the data set : it is possible that a bigger data set would have led to better models. It is also possible that the genre classification obtained with the Last.fm API are somewhat wrong.
 
-Given that socioeconomic factors were the strongest predictors of deaths per cases, it appears that on the county level, COVID-19 rates are most associated with community healthcare burdens. That is, COVID-19 outcomes appear to reflect the reality of healthcare accessibility across counties; those with high percentages of uninsured citizens, or with high degrees of segregation and inequality, might feature division of healthcare resources that reflects these disparities. It is thus reasonable that deaths per case rates would be higher when significant groups of a population have lesser access to healthcare resources and treatment. Notably, if our conclusions are indeed correct, this effect would likely be pronounced in situations of scarcity such as the early months of the pandemic studied here, when many hospitals faced shortages of ventilators and other resource shortages. Given the progression of COVID-19 since 2021 as well as the inherent complexity of fatality incidence, we are hesitant to make any assertive claims about the true predictive capacity of any of the top factors we identified. Nonetheless, these results can help inform policies directed toward improving various determinants of important health outcomes in counties across the US.  
-
-As the world shifts towards herd immunity as vaccines are made more widely available, it is important to reflect upon how the pandemic has asymmetrically impacted different counties across the country. Our results suggest that structural vulnerabilities can be captured by measures of inequality and poverty; the identification of counties high on these factors should serve as a warning for future vulnerability to health crises. These analyses can serve to protect already vulnerable communities from suffering disproportionately in the future. 
 
 
 ## Limitations
 
 ### Dataset limitations
 
-As it is detailed in the Frequently Asked Questions page of County Health Rankings & Roadmaps program  website,^[County Health Rankings & Roadmaps. (n.d.) Frequently Asked Questions. https://www.countyhealthrankings.org/explore-health-rankings/faq-page] all of the variables are from 2019 or earlier. Thus, it is possible that the values of the variables assessed were different in 2020, meaning that the interpretation of our analysis may need to be taken with a grain of salt. Regardless, given that we analyzed data on the county level, it is unlikely that any county experienced enough drastic change over the course of the year to significantly affect our analysis. Furthermore, our dataset has a large number of observations to account for potential variability, although notably, many observations had to be removed as some of the R packages used to build some of our models required that no NA values were present in the data. In other words, since each observation represents a different US county, many counties were left out of our analysis. Another limitation is that, as described in the Exploratory Data Analysis section, there is evidence of correlation amongst some of our explanatory variables. This means that some variables can be confounding variables, which mask or distort the relationship between measured variables. Also, variables selected in the LASSO regression and elastic net regression as well as variables marked important in the tree methods might be misleading in that, given how variable selection works, it is possible that some selected variables are simply representative of a larger group of correlated variables. 
+In addition to the fact that we could always get more songs, we can think of one possible limitation in the retrieved data. Indeed, as described in the part describing the data sources, the retrieved songs were retrieved because they were present in  the top tracks for a specific tag in the Last.fm API. However, we weren't able to retrieve all of the discographies of the retrieved artists because the at one point the api calls broke so that led to a smaller dataset than intended as well as maybe some issues with the genre tag retrieved from the Last.fm database.
 
-### Analysis limitations
-
-While splitting the data into training and testing datasets allows for a more unbiased test of the models, we recognize that our conclusions inherently contain some randomness due to the random split of the data. In other words, splitting the data again using a different random seed may have yielded different p-values in the OLS regression, different selected variables in the shrinkage methods, and different variables selected as important in the tree-based methods. Next, although we provide different methods for robust interpretation of the variables, our analysis incorporates only a specific subset of health related variables. The results of the analysis might change dramatically if we were to incorporate other variables. For example, as mentioned in the Exploratory Data Analysis, states in the northeastern part of the United States suffered from a high rate of COVID-19 cases and deaths in 2020. This may not have been because these states performed poorly in the health variables mentioned above. Rather, it may be due to the fact that these states are densely populated and hence were more susceptible to disease spread at the outset of the COVID-19 pandemic. In other words, other factors like geographic or demographic variables can hugely impact case fatality rate. 
 
 ## Follow-ups
 
-To compensate for the limitations mentioned above, more extensive analysis can be done as we acquire more data from 2020 and 2021. Not only can we extend our analysis by utilizing the most up-to-date datasets, but we can also examine how COVID-19 cases and deaths have affected various health factors of each county. In other words, the explanatory and response variables can be reversed to conduct more dynamic data analyses. Next, given that many observations needed to be omitted in our dataset as they contained NA fields, we recommend that our analyses be reconducted once the missing data is collected. Finally, future work on the social determinants of health in the context of COVID-19 might also look at different population levels such as states, bigger geographical regions in America, or even different countries.
+To compensate for the limitations mentioned above, more extensive analysis can be done as one with more computation power and more time can acquire more data (no API calls breaking after a while). Not only can this analysis be expanded by using a bigger dataset, but a bigger dataset could also allow to categorize into more specific genres in the future. 
 
 \appendix
 
 # Appendix: Descriptions of features {#appendix}
 
-Below are the 41 features we used for analysis. Words written in parentheses represent variable names. Unless noted otherwise, all variables are continuous. 
+Below are the features contained in the dataset. Words written in parentheses represent variable names.
 
-**Health behaviors:** 
-
-- *Tobacco Use*
-  - Adult smoking (`smoke_perc`): Percentage of adults who are current smokers.
-- *Diet and Exercise* 
-  - Adult obesity (`obesity_perc`): Percentage of the adult population (age 20 and older) reporting a body mass index (BMI) greater than or equal to 30 kg/m2.
-  - Food environment index (`food_environment`): Index of factors that contribute to a healthy food environment, from 0 (worst) to 10 (best).
-  - Physical inactivity (`inactive_perc`): Percentage of adults age 20 and over reporting no leisure-time physical activity.
-  - Access to exercise opportunities (`physical_exercise_opportunities`): Percentage of population with adequate access to locations for physical activity
-  - Food insecurity (`Food_Insecure_perc`): Percentage of population who lack adequate access to food.
-  - Limited access to healthy foods (`limited_healthy_access`): Percentage of population who are low-income and do not live close to a grocery store.
-- *Alcohol & Drug Use*
-  - Excessive Drinking (`drinking_perc`): Percentage of adults reporting binge or heavy drinking.
-- *Sexual Activity*
-  - Sexually transmitted infections (`stis`): Number of newly diagnosed chlamydia cases per 100,000 population.
-  - Teen births (`teen_births`): Number of births per 1,000 female population ages 15-19.
-  - Low Birth Weight Percentage (`low_birthweight_percentage`): Percentage of live births with low birthweight (< 2,500 grams).
-
-**Clinical care:**
-
-- *Access to Care*
-  - Uninsured (`uninsured`): Percentage of population under age 65 without health insurance.
-  - Primary care physicians (`primarycare_ratio`): Ratio of population to primary care physicians.
-  - Dentists (`dentist_ratio`): Ratio of population to dentists. 
-  - Mental health providers (mentalhealth_ratio): Ratio of population to mental health providers.
-  - Other primary care providers (`otherproviders_ratio`): Ratio of population to primary care providers other than physicians.
-- *Quality of Care*
-  - Preventable hospital stays (`preventable_hospitalization`): Rate of hospital stays for ambulatory-care sensitive conditions per 100,000 Medicare enrollees.
-  - Mammography screening (`mammogram_perc`): Percentage of female Medicare enrollees ages 65-74 that received an annual mammography screening.
-  - Flu vaccinations (`flu_vaccine_perc`): Percentage of fee-for-service (FFS) Medicare enrollees that had an annual flu vaccination.
-  - Teen births (`teen_births`): Number of births per 1,000 female population ages 15-19.
-
-**Social and economic factors:** 
-
-- *Education*
-  - High school completion (`HS_completion`): Percentage of adults ages 25 and over with a high school diploma or equivalent.
-  - Some college (`some_college`): Percentage of adults ages 25-44 with some post-secondary education.
-  - Disconnected youth (`disconnected_youth`): Percentage of teens and young adults ages 16-19 who are neither working nor in school.
-- *Employment*
-  - Unemployment (`unemployment`): Percentage of population ages 16 and older who are unemployed but seeking work.
-- *Income* 
-  - Children in poverty (`children_poverty_percent`): Percentage of people under age 18 in poverty.
-  - Income inequality (`income_inequality`): Ratio of household income at the 80th percentile to income at the 20th percentile.
-  - Median household income (`median_income`): The income where half of households in a county earn more and half of households earn less.
-  - Children eligible for free or reduced price lunch (`children_freelunches`): Percentage of children enrolled in public schools that are eligible for free or reduced price lunch.
-- *Family & Social Support*
-  - Children in single-parent households (`single_parent_households`): Percentage of children that live in a household headed by a single parent.
-  - Social associations (`social_associations`): Number of membership associations per 10,000 residents. 
-  - Residential segregation—Black/White (`segregation_black_white`): Index of dissimilarity where higher values indicate greater residential segregation between Black and White county residents.
-  - Residential segregation—non-White/White (`segregation_nonwhite_white`): Index of dissimilarity where higher values indicate greater residential segregation between non-White and White county residents.
-- *Community Safety*
-  - Violent crime rate (`Violent_crime`) Number of reported violent crime offenses per 100,000 residents. 
-
-**Physical environment:**
-
-- *Air & Water Quality*
-  - Air pollution - particulate matter (`air_pollution`): Average daily density of fine particulate matter in micrograms per cubic meter (PM2.5).
-  - Drinking water violations (`water_violations`): Indicator of the presence of health-related drinking water violations. 1 indicates the presence of a violation, 0 indicates no violation.
-- *Housing & Transit*
-  - Housing overcrowding (`housing_overcrowding`): Percentage of households with overcrowding, 
-  - Severe housing costs (`high_housing_costs`): Percentage of households with high housing costs
-  - Driving alone to work (`driving_alone_perc`): Percentage of the workforce that drives alone to work.
-  - Long commute—driving alone (`long_commute_perc`): Among workers who commute in their car alone, the percentage that commute more than 30 minutes.
-  - Traffic volume (`traffic_volume`): Average traffic volume per meter of major roadways in the county.
-  - Homeownership (`homeownership`): Percentage of occupied housing units that are owned.
-  - Severe housing cost burden (`severe_ownership_cost`): Percentage of households that spend 50% or more of their household income on housing.
+  - Name of the artist (`artist_name` - character): Name of the artist performing the song.
+  - Artist identifier (`artist_id` - character): The unique identifier used to identify an artist on Spotify.
+  - Name of the song (`track_name` - character): Title of the song.
+  - Track identifier (`track_id` - character): The unique identifier used to identify a track on Spotify.
+  - Danceability (`danceability` - number):  Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.
+  - Energy (`energy` - number):  Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.
+  - Loudness (`loudness` - number): The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typically range between -60 and 0 db.
+  - Mode (`mode` - factor): Mode indicates the modality (major or minor) of a track, the type of scale from which its melodic content is derived. Major is represented by 1 and minor is 0.
+  - Speechiness (`speechiness` - number): Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g. talk show, audio book, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks that are probably made entirely of spoken words. Values between 0.33 and 0.66 describe tracks that may contain both music and speech, either in sections or layered, including such cases as rap music. Values below 0.33 most likely represent music and other non-speech-like tracks.
+  - Acousticness (`acousticness` - number): A confidence measure from 0.0 to 1.0 of whether the track is acoustic. 1.0 represents high confidence the track is acoustic.
+  - Instrumentalness (`instrumentalness` - number): Predicts whether a track contains no vocals. "Ooh" and "aah" sounds are treated as instrumental in this context. Rap or spoken word tracks are clearly "vocal". The closer the instrumentalness value is to 1.0, the greater likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, but confidence is higher as the value approaches 1.0.
+  - Liveness (`liveness` - number): Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 provides strong likelihood that the track is live.
+  - Valence (`valence` - number) : A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry). 
+  - Tempo (`tempo` - number): The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration.
+  - Time signature (`time_signature` - factor): An estimated time signature. The time signature (meter) is a notational convention to specify how many beats are in each bar (or measure). The time signature ranges from 3 to 7 indicating time signatures of "3/4", to "7/4".
+  - Song duration (`duration_ms` - number): The duration of the track in milliseconds.
+  - Explicit (`explicit` - boolean): Whether the lyrics of the song are explicit or not.
+  - Genre of the track (`track_genre` - factor): One of the six genres chosen for the analysis (Country, Hip-Hop, Jazz, Pop, Rnb, Rock)
