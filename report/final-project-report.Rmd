@@ -18,7 +18,7 @@ library(kableExtra)
 
 \bigskip
 
-The code to reproduce this report is available [on Github](https://github.com/Katsevich-Teaching/final-project-template).
+The code to reproduce this report is available [on Github](https://github.com/bnajete/stat471-final-project).
 
 \newpage
 
@@ -34,7 +34,7 @@ Our dataset pulled data from two sources : the Spotify developer API, which allo
 Before exploring our data or running any analyses, we split our data into a training dataset and a test dataset, with the test dataset reserved for assessing and comparing model performance. Then, we explored our data to assess correlations between variables and between variables and the response. In order to build an optimal predictive model, we then built three different cross-validated models: a classification tree, random forest and a multi-class logistic model. We also tried to implement a boosting model in addition to the other tree-based models, but the multi-class classification seemed to cause an exremely high misclassification and we therefore chose to take out this model.
 
 **Conclusions.** 
-Unfortunately, it looks like none of the models we used were efficient enough to create a real and accurate tool for classifying music genre. We think that it is unlikely that the  inaccuracy of our models could have been caused by some class imbalances seeing how we made sure that each of the classes would be roughly equivalently represented. It could then be caused by a lack of correlation between the set of features created by Spotify or by a dataset too small to tackle such a big classification task.
+Unfortunately, it looks like none of the models we used were efficient enough to create a real and accurate tool for classifying music genre. We think that it is unlikely that the  inaccuracy of our models could have been caused by some class imbalances seeing how we made sure that each of the classes would be roughly equivalently represented. It could then have been caused by a lack of correlation between the set of features created by Spotify or by a dataset too small to tackle such a big classification task.
 
 \newpage
 
@@ -132,11 +132,11 @@ In Figure \@ref(fig:heatmap-features), the main correlations between features th
 ## Tree-based methods
 
 ### Decision tree
-The first method we decided to implement was the decision tree. In order to have the most accurate model possible, we decided to find a tree of optimal size via pruning and cross-validation. We therefore picked the decision tree that minimilized the cross-validation error, like pictured in Figure \@ref(fig:cv-error-decision-tree).
+The first method we decided to implement was the decision tree. In order to have the most accurate model possible, we decided to find a tree of optimal size via pruning and cross-validation. We therefore picked the decision tree that minimized the cross-validation error, like pictured in Figure \@ref(fig:cv-error-decision-tree).
 ```{r cv-error-decision-tree, out.width = "60%", fig.cap = "Cross-validation error for the different value of terminal nodes in the decision tree", fig.align='center', echo = FALSE, fig.pos = "H"}
 knitr::include_graphics("../results/cv-error-decision-tree.png")
 ```
-```{r optimal-tree-info}
+```{r optimal-tree-info, message = FALSE, echo = FALSE, fig.pos = "H"}
 read_tsv("../results/optimal_tree_info.tsv") %>%
   kable(format = "latex", row.names = NA,
         booktabs = TRUE, 
@@ -198,9 +198,7 @@ Table \@ref(tab:model-evaluation) shows the misclassification error for all the 
  
 Our results show that, even if we're convinced that an efficient and accurate prediction of a song genre would be a good addition to the song recommender system, the strategy chosen for this study was not the right one. It could be caused by a glitch in the data we gathered or by the fact that the features given by Spotify are not correlated enough with the genre classification.
 
-Some issues present in the gathered data could be the size of the data set : it is possible that a bigger data set would have led to better models. It is also possible that the genre classification obtained with the Last.fm API are somewhat wrong.
-
-
+Some issues present in the gathered data could be the size of the data set : it is possible that a bigger data set would have led to better models. It is also possible that the genre classification obtained with the Last.fm APIwere somewhat wrong.
 
 ## Limitations
 
